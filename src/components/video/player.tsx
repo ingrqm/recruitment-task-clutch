@@ -370,7 +370,7 @@ export const VideoPlayer = ({
       {Platform.OS === 'android' && isFullscreen && (
         <Modal
           visible
-          animationType="none"
+          animationType="fade"
           statusBarTranslucent
           onRequestClose={handleFullscreenExit}
         >
