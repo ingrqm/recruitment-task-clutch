@@ -21,6 +21,20 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
 
+  migrations:
+    name: Validate Migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: supabase init --workdir . || true
+      - run: supabase db start
+      - run: supabase db reset
+
   preview:
     name: EAS Update Preview
     needs: quality
@@ -46,3 +60,7 @@ jobs:
       - uses: expo/expo-github-action/preview@v8
         with:
           command: eas update --branch "pr-${{ github.event.pull_request.number }}" --message "${{ github.event.pull_request.title }}"
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+          EXPO_PUBLIC_CLUTCH_API_URL: ${{ secrets.EXPO_PUBLIC_CLUTCH_API_URL }}
