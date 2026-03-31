@@ -230,10 +230,15 @@ export const VideoPlayer = ({
     }
   }, [setGlobalFullscreen]);
 
-  const handleFullscreenExit = useCallback(() => {
+  const handleFullscreenExit = useCallback(async () => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
-  }, [setGlobalFullscreen]);
+    // Samsung codecs lose video surface on VideoView switch — force reconnect
+    if (Platform.OS === 'android') {
+      await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
+      activePlayer.play();
+    }
+  }, [setGlobalFullscreen, activePlayer, videoUrls, activeUrlKey]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
@@ -266,25 +271,27 @@ export const VideoPlayer = ({
     <View className="aspect-[4/5] w-full overflow-hidden bg-card">
       <GestureDetector gesture={tapGesture}>
         <View style={{ width: '100%', height: '100%' }}>
-          {!(Platform.OS === 'android' && isFullscreen) && (
-            <VideoView
-              ref={videoViewRef}
-              player={activePlayer}
-              style={{ width: '100%', height: '100%' }}
-              contentFit={isFullscreen ? 'contain' : 'cover'}
-              nativeControls={isFullscreen}
-              fullscreenOptions={{
-                enable: true,
-                orientation:
-                  activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
-              }}
-              onFullscreenEnter={() => {
-                setIsFullscreen(true);
-                setGlobalFullscreen(true);
-              }}
-              onFullscreenExit={handleFullscreenExit}
-            />
-          )}
+          <VideoView
+            ref={videoViewRef}
+            player={activePlayer}
+            style={
+              Platform.OS === 'android' && isFullscreen
+                ? { width: 0, height: 0 }
+                : { width: '100%', height: '100%' }
+            }
+            contentFit={isFullscreen ? 'contain' : 'cover'}
+            nativeControls={isFullscreen}
+            fullscreenOptions={{
+              enable: true,
+              orientation:
+                activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
+            }}
+            onFullscreenEnter={() => {
+              setIsFullscreen(true);
+              setGlobalFullscreen(true);
+            }}
+            onFullscreenExit={handleFullscreenExit}
+          />
 
           <Animated.View
             style={[
