@@ -1,11 +1,14 @@
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
+import { CommentSheet } from '~/components/comments/sheet';
 import { LikedBySheet } from '~/components/feed/liked-by-sheet';
 import { useAuth } from '~/hooks/use-auth';
+import { useCommentSheet } from '~/store/comment-sheet';
 import { useLikedBySheet } from '~/store/liked-by-sheet';
 
 const AppContent = () => {
+  const { videoId: commentVideoId, closeComments } = useCommentSheet();
   const { videoId: likedByVideoId, closeLikedBy } = useLikedBySheet();
 
   return (
@@ -18,6 +21,7 @@ const AppContent = () => {
       >
         <Stack.Screen name="(tabs)" />
       </Stack>
+      <CommentSheet videoId={commentVideoId} onClose={closeComments} />
       <LikedBySheet videoId={likedByVideoId} onClose={closeLikedBy} />
     </View>
   );

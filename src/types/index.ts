@@ -47,3 +47,14 @@ export type VideoStats = {
   like_count: number;
   comment_count: number;
 };
+
+export type Comment = {
+  id: string;
+  user_id: string;
+  video_id: string;
+  content: string;
+  created_at: string;
+  parent_id: string | null;
+  profiles?: Profile;
+  replies?: Comment[];
+};
