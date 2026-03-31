@@ -3,7 +3,15 @@ import { useEvent } from 'expo';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Platform,
+  Pressable,
+  StatusBar,
+  Text,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -14,6 +22,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useSetFullscreen } from '~/store/fullscreen';
 import { useMute } from '~/store/mute';
 
 import type {
@@ -45,21 +54,24 @@ export const VideoPlayer = ({
   onDoubleTap,
 }: VideoPlayerProps) => {
   const { isMuted, toggleMute, setMuted } = useMute();
+  const setGlobalFullscreen = useSetFullscreen();
+
+  const preloadAll = Platform.OS !== 'android';
 
   const playerAutopan = useVideoPlayer(
-    activeUrlKey === 'clutch_autopan' || isActive
+    activeUrlKey === 'clutch_autopan' || (preloadAll && isActive)
       ? videoUrls.clutch_autopan
       : null,
     setupPlayer,
   );
   const playerMatchWoBreaks = useVideoPlayer(
-    activeUrlKey === 'match_wo_breaks' || isActive
+    activeUrlKey === 'match_wo_breaks' || (preloadAll && isActive)
       ? videoUrls.match_wo_breaks
       : null,
     setupPlayer,
   );
   const playerLandscape = useVideoPlayer(
-    activeUrlKey === 'clutch_landscape' || isActive
+    activeUrlKey === 'clutch_landscape' || (preloadAll && isActive)
       ? videoUrls.clutch_landscape
       : null,
     setupPlayer,
@@ -121,15 +133,11 @@ export const VideoPlayer = ({
   const { status } = statusStates[activeUrlKey];
   const { muted: playerMuted } = mutedStates[activeUrlKey];
 
-  const MAX_AUTO_RETRIES = 3;
-
   const thumbnailOpacity = useSharedValue(1);
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [hasExhaustedRetries, setHasExhaustedRetries] = useState(false);
-  const autoRetryCountRef = useRef(0);
   const skipMuteSyncRef = useRef(false);
 
   useEffect(() => {
@@ -148,30 +156,30 @@ export const VideoPlayer = ({
   }, [isActive, playerMuted, isMuted, setMuted]);
 
   useEffect(() => {
-    const allPlayers = [playerAutopan, playerMatchWoBreaks, playerLandscape];
-    const allKeys: VideoUrlKey[] = [
-      'clutch_autopan',
-      'match_wo_breaks',
-      'clutch_landscape',
+    const allPlayers: [string, ReturnType<typeof useVideoPlayer>][] = [
+      ['clutch_autopan', playerAutopan],
+      ['match_wo_breaks', playerMatchWoBreaks],
+      ['clutch_landscape', playerLandscape],
     ];
 
     if (isActive) {
-      allKeys.forEach((key, i) => {
+      allPlayers.forEach(([key, p]) => {
         if (key === activeUrlKey) {
-          allPlayers[i].muted = isMuted;
-          allPlayers[i].play();
+          p.muted = isMuted;
+          p.play();
         } else {
-          allPlayers[i].pause();
+          p.pause();
         }
       });
     } else {
-      allPlayers.forEach((p) => p.pause());
+      allPlayers.forEach(([, p]) => p.pause());
       thumbnailOpacity.value = 1;
     }
   }, [
     isActive,
-    activeUrlKey,
+    isFullscreen,
     isMuted,
+    activeUrlKey,
     playerAutopan,
     playerMatchWoBreaks,
     playerLandscape,
@@ -191,47 +199,18 @@ export const VideoPlayer = ({
     }
   }, [isActive, isPlaying, status, thumbnailOpacity]);
 
-  const attemptRetry = useCallback(async () => {
-    setIsRetrying(true);
-    try {
-      await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
-      activePlayer.play();
-    } catch {
-      // replaceAsync can throw — treat as failed attempt
-    }
-    setTimeout(() => setIsRetrying(false), 2000);
-  }, [activePlayer, videoUrls, activeUrlKey]);
-
   useEffect(() => {
     if (status === 'error') {
       thumbnailOpacity.value = 1;
-
-      if (isActive && autoRetryCountRef.current < MAX_AUTO_RETRIES) {
-        autoRetryCountRef.current += 1;
-        const delay = autoRetryCountRef.current * 1000;
-        const timer = setTimeout(() => attemptRetry(), delay);
-        return () => clearTimeout(timer);
-      }
-
-      if (autoRetryCountRef.current >= MAX_AUTO_RETRIES) {
-        setHasExhaustedRetries(true);
-      }
     }
-  }, [status, isActive, thumbnailOpacity, attemptRetry]);
+  }, [status, thumbnailOpacity]);
 
-  useEffect(() => {
-    if (isActive && hasExhaustedRetries && status === 'error') {
-      autoRetryCountRef.current = 0;
-      setHasExhaustedRetries(false);
-      attemptRetry();
-    }
-  }, [isActive, hasExhaustedRetries, status, attemptRetry]);
-
-  const handleRetry = useCallback(() => {
-    autoRetryCountRef.current = 0;
-    setHasExhaustedRetries(false);
-    attemptRetry();
-  }, [attemptRetry]);
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
+    activePlayer.play();
+    setTimeout(() => setIsRetrying(false), 2000);
+  }, [activePlayer, videoUrls, activeUrlKey]);
 
   const thumbnailStyle = useAnimatedStyle(() => ({
     opacity: thumbnailOpacity.value,
@@ -243,13 +222,18 @@ export const VideoPlayer = ({
   }));
 
   const handleEnterFullscreen = useCallback(() => {
-    setIsFullscreen(true);
-    videoViewRef.current?.enterFullscreen();
-  }, []);
+    if (Platform.OS === 'android') {
+      setIsFullscreen(true);
+      setGlobalFullscreen(true);
+    } else {
+      videoViewRef.current?.enterFullscreen();
+    }
+  }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
-  }, []);
+    setGlobalFullscreen(false);
+  }, [setGlobalFullscreen]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
@@ -282,20 +266,25 @@ export const VideoPlayer = ({
     <View className="aspect-[4/5] w-full overflow-hidden bg-card">
       <GestureDetector gesture={tapGesture}>
         <View style={{ width: '100%', height: '100%' }}>
-          <VideoView
-            ref={videoViewRef}
-            player={activePlayer}
-            style={{ width: '100%', height: '100%' }}
-            contentFit={isFullscreen ? 'contain' : 'cover'}
-            nativeControls={isFullscreen}
-            fullscreenOptions={{
-              enable: true,
-              orientation:
-                activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
-            }}
-            onFullscreenEnter={() => setIsFullscreen(true)}
-            onFullscreenExit={handleFullscreenExit}
-          />
+          {!(Platform.OS === 'android' && isFullscreen) && (
+            <VideoView
+              ref={videoViewRef}
+              player={activePlayer}
+              style={{ width: '100%', height: '100%' }}
+              contentFit={isFullscreen ? 'contain' : 'cover'}
+              nativeControls={isFullscreen}
+              fullscreenOptions={{
+                enable: true,
+                orientation:
+                  activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
+              }}
+              onFullscreenEnter={() => {
+                setIsFullscreen(true);
+                setGlobalFullscreen(true);
+              }}
+              onFullscreenExit={handleFullscreenExit}
+            />
+          )}
 
           <Animated.View
             style={[
@@ -340,11 +329,11 @@ export const VideoPlayer = ({
 
       {(status === 'error' || isRetrying) && (
         <View className="absolute inset-0 items-center justify-center bg-black/80">
-          {isRetrying || !hasExhaustedRetries ? (
+          {isRetrying ? (
             <>
               <ActivityIndicator color="white" size="large" />
               <Text className="mt-3 text-sm font-medium text-white">
-                Loading video...
+                Retrying...
               </Text>
             </>
           ) : (
@@ -377,6 +366,44 @@ export const VideoPlayer = ({
           color="white"
         />
       </Pressable>
+
+      {Platform.OS === 'android' && isFullscreen && (
+        <Modal
+          visible
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={handleFullscreenExit}
+        >
+          <StatusBar hidden />
+          <View style={{ flex: 1, backgroundColor: 'black' }}>
+            <VideoView
+              player={activePlayer}
+              style={{ flex: 1 }}
+              contentFit="contain"
+              nativeControls
+              fullscreenOptions={{ enable: false }}
+            />
+            <Pressable
+              onPress={handleFullscreenExit}
+              style={{
+                position: 'absolute',
+                top: 48,
+                right: 16,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                elevation: 10,
+                zIndex: 10,
+              }}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </Pressable>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };

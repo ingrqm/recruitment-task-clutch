@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { CommentButton } from '~/components/feed/comment-button';
 import { LikeButton } from '~/components/feed/like-button';
@@ -67,14 +68,25 @@ export const VideoCard = ({
 
   return (
     <View className="pb-4" onLayout={handleLayout}>
-      <VideoPlayer
-        videoUrls={videoUrls}
-        thumbnailUrls={thumbnailUrls}
-        activeUrlKey={activeUrlKey}
-        isActive={isActive}
-        onTapInactive={isActive ? undefined : handleTapInactive}
-        onDoubleTap={handleDoubleTap}
-      />
+      {Platform.OS === 'android' && !isActive ? (
+        <View className="aspect-[4/5] w-full overflow-hidden bg-card">
+          <Image
+            source={{ uri: thumbnailUrls[activeUrlKey] }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+          />
+        </View>
+      ) : (
+        <VideoPlayer
+          videoUrls={videoUrls}
+          thumbnailUrls={thumbnailUrls}
+          activeUrlKey={activeUrlKey}
+          isActive={isActive}
+          onTapInactive={isActive ? undefined : handleTapInactive}
+          onDoubleTap={handleDoubleTap}
+        />
+      )}
 
       <View className="flex-row items-center justify-between px-4 pt-3">
         <View className="flex-row items-center gap-4">

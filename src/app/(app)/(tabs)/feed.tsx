@@ -1,6 +1,6 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, RefreshControl, View } from 'react-native';
+import { AppState, Platform, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '~/components/ui/empty-state';
@@ -9,6 +9,7 @@ import { FeedSkeleton } from '~/components/ui/skeleton';
 import { VideoCard } from '~/components/video';
 import { useVideos } from '~/hooks/use-videos';
 import { useCommentSheet } from '~/store/comment-sheet';
+import { useIsFullscreen } from '~/store/fullscreen';
 import { useLikedBySheet } from '~/store/liked-by-sheet';
 
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
@@ -32,6 +33,7 @@ const FeedScreen = () => {
   const [isAppActive, setIsAppActive] = useState(true);
   const { videoId: commentVideoId, openComments } = useCommentSheet();
   const { openLikedBy } = useLikedBySheet();
+  const isFullscreen = useIsFullscreen();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -115,7 +117,8 @@ const FeedScreen = () => {
               onLayout={handleItemLayout}
             />
           )}
-          drawDistance={700}
+          drawDistance={Platform.OS === 'android' ? 200 : 700}
+          scrollEnabled={!isFullscreen}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           onEndReached={handleEndReached}
