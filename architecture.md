@@ -14,19 +14,21 @@ graph TD
     App --> CommentSheet["CommentSheet<br/>Overlay above Stack"]
     App --> LikedBySheet["LikedBySheet<br/>Overlay above Stack"]
 
-    Stack --> Tabs["(tabs)/_layout.tsx<br/>NativeTabs"]
+    Stack --> Tabs["(tabs)/_layout.tsx<br/>NativeTabs (iOS 26+) / Tabs (fallback)"]
     Stack --> UserProfile["user/[id].tsx"]
 
     Tabs --> Feed["feed.tsx<br/>FlashList + VideoCard"]
     Tabs --> Profile["profile.tsx"]
 
     Feed --> VideoCard["VideoCard"]
-    VideoCard --> VideoPlayer["VideoPlayer<br/>3x useVideoPlayer"]
+    VideoCard --> VideoPlayer["VideoPlayer<br/>3x useVideoPlayer (iOS)<br/>1x active only (Android)"]
 ```
 
 ## Video Player Architecture
 
-Each `VideoCard` renders a `VideoPlayer` with three `useVideoPlayer` instances — one per video URL type (autopan, match without breaks, landscape). Only the active URL key's player plays; the other two are paused.
+Each `VideoCard` renders a `VideoPlayer` with three `useVideoPlayer` hooks — one per video URL type (autopan, match without breaks, landscape). Only the active URL key's player plays; the other two are paused.
+
+**Platform differences:** On iOS, all three players are preloaded when the card is active for instant URL switching. On Android, only the active URL key receives a source (the others get `null`) to reduce codec/memory pressure. Additionally, on Android only the active card mounts `VideoPlayer` at all — inactive cards render a static thumbnail to prevent OOM crashes.
 
 ```mermaid
 sequenceDiagram
@@ -56,6 +58,8 @@ sequenceDiagram
 ```
 
 A thumbnail overlay (using `expo-image`) covers the video until the native compositor renders the first frame. The thumbnail hides 300ms after `readyToPlay` status to avoid flash.
+
+**Fullscreen:** On iOS, `enterFullscreen()` opens native fullscreen with system controls. On Android, native fullscreen is broken (`FullscreenPlayerActivity` loses the `VideoView` reference), so a React Native `Modal` renders a second `VideoView` with the same player — the card's `VideoView` is hidden during this to avoid dual-attach issues. A Jotai `fullscreenAtom` disables FlashList scroll while fullscreen is active.
 
 ## HLS Video Delivery
 
@@ -147,6 +151,7 @@ graph TD
         CA["commentVideoIdAtom"]
         LA["likedByVideoIdAtom"]
         MA["mutedAtom"]
+        FA["fullscreenAtom"]
     end
 
     Feed["feed.tsx"] -->|"openComments(videoId)"| CA
