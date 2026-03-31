@@ -8,6 +8,7 @@ import { ErrorState } from '~/components/ui/error-state';
 import { FeedSkeleton } from '~/components/ui/skeleton';
 import { VideoCard } from '~/components/video';
 import { useVideos } from '~/hooks/use-videos';
+import { useCommentSheet } from '~/store/comment-sheet';
 import { useLikedBySheet } from '~/store/liked-by-sheet';
 
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
@@ -29,6 +30,7 @@ const FeedScreen = () => {
 
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [isAppActive, setIsAppActive] = useState(true);
+  const { videoId: commentVideoId, openComments } = useCommentSheet();
   const { openLikedBy } = useLikedBySheet();
 
   useEffect(() => {
@@ -102,7 +104,12 @@ const FeedScreen = () => {
             <VideoCard
               video={item}
               index={index}
-              isActive={index === activeVideoIndex && isAppActive}
+              isActive={
+                index === activeVideoIndex &&
+                commentVideoId === null &&
+                isAppActive
+              }
+              onOpenComments={openComments}
               onShowLikedBy={openLikedBy}
               onScrollToVideo={handleScrollToVideo}
               onLayout={handleItemLayout}
