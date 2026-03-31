@@ -233,7 +233,11 @@ export const VideoPlayer = ({
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
-  }, [setGlobalFullscreen]);
+    // Delay play to allow card VideoView to re-attach after Modal unmount
+    if (Platform.OS === 'android') {
+      setTimeout(() => activePlayer.play(), 150);
+    }
+  }, [setGlobalFullscreen, activePlayer]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
