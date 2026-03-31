@@ -1,6 +1,6 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, RefreshControl, View } from 'react-native';
+import { AppState, Platform, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '~/components/ui/empty-state';
@@ -115,7 +115,7 @@ const FeedScreen = () => {
               onLayout={handleItemLayout}
             />
           )}
-          drawDistance={700}
+          drawDistance={Platform.OS === 'android' ? 200 : 700}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           onEndReached={handleEndReached}

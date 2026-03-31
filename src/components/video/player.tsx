@@ -121,15 +121,11 @@ export const VideoPlayer = ({
   const { status } = statusStates[activeUrlKey];
   const { muted: playerMuted } = mutedStates[activeUrlKey];
 
-  const MAX_AUTO_RETRIES = 3;
-
   const thumbnailOpacity = useSharedValue(1);
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [hasExhaustedRetries, setHasExhaustedRetries] = useState(false);
-  const autoRetryCountRef = useRef(0);
   const skipMuteSyncRef = useRef(false);
 
   useEffect(() => {
@@ -148,30 +144,22 @@ export const VideoPlayer = ({
   }, [isActive, playerMuted, isMuted, setMuted]);
 
   useEffect(() => {
-    const allPlayers = [playerAutopan, playerMatchWoBreaks, playerLandscape];
-    const allKeys: VideoUrlKey[] = [
-      'clutch_autopan',
-      'match_wo_breaks',
-      'clutch_landscape',
-    ];
-
     if (isActive) {
-      allKeys.forEach((key, i) => {
+      Object.entries(players).forEach(([key, p]) => {
         if (key === activeUrlKey) {
-          allPlayers[i].muted = isMuted;
-          allPlayers[i].play();
+          p.muted = isMuted;
+          p.play();
         } else {
-          allPlayers[i].pause();
+          p.pause();
         }
       });
     } else {
-      allPlayers.forEach((p) => p.pause());
+      Object.values(players).forEach((p) => p.pause());
       thumbnailOpacity.value = 1;
     }
   }, [
     isActive,
     activeUrlKey,
-    isMuted,
     playerAutopan,
     playerMatchWoBreaks,
     playerLandscape,
@@ -191,47 +179,18 @@ export const VideoPlayer = ({
     }
   }, [isActive, isPlaying, status, thumbnailOpacity]);
 
-  const attemptRetry = useCallback(async () => {
-    setIsRetrying(true);
-    try {
-      await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
-      activePlayer.play();
-    } catch {
-      // replaceAsync can throw — treat as failed attempt
-    }
-    setTimeout(() => setIsRetrying(false), 2000);
-  }, [activePlayer, videoUrls, activeUrlKey]);
-
   useEffect(() => {
     if (status === 'error') {
       thumbnailOpacity.value = 1;
-
-      if (isActive && autoRetryCountRef.current < MAX_AUTO_RETRIES) {
-        autoRetryCountRef.current += 1;
-        const delay = autoRetryCountRef.current * 1000;
-        const timer = setTimeout(() => attemptRetry(), delay);
-        return () => clearTimeout(timer);
-      }
-
-      if (autoRetryCountRef.current >= MAX_AUTO_RETRIES) {
-        setHasExhaustedRetries(true);
-      }
     }
-  }, [status, isActive, thumbnailOpacity, attemptRetry]);
+  }, [status, thumbnailOpacity]);
 
-  useEffect(() => {
-    if (isActive && hasExhaustedRetries && status === 'error') {
-      autoRetryCountRef.current = 0;
-      setHasExhaustedRetries(false);
-      attemptRetry();
-    }
-  }, [isActive, hasExhaustedRetries, status, attemptRetry]);
-
-  const handleRetry = useCallback(() => {
-    autoRetryCountRef.current = 0;
-    setHasExhaustedRetries(false);
-    attemptRetry();
-  }, [attemptRetry]);
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
+    activePlayer.play();
+    setTimeout(() => setIsRetrying(false), 2000);
+  }, [activePlayer, videoUrls, activeUrlKey]);
 
   const thumbnailStyle = useAnimatedStyle(() => ({
     opacity: thumbnailOpacity.value,
@@ -293,7 +252,10 @@ export const VideoPlayer = ({
               orientation:
                 activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
             }}
-            onFullscreenEnter={() => setIsFullscreen(true)}
+            onFullscreenEnter={() => {
+              setIsFullscreen(true);
+              activePlayer.play();
+            }}
             onFullscreenExit={handleFullscreenExit}
           />
 
@@ -340,11 +302,11 @@ export const VideoPlayer = ({
 
       {(status === 'error' || isRetrying) && (
         <View className="absolute inset-0 items-center justify-center bg-black/80">
-          {isRetrying || !hasExhaustedRetries ? (
+          {isRetrying ? (
             <>
               <ActivityIndicator color="white" size="large" />
               <Text className="mt-3 text-sm font-medium text-white">
-                Loading video...
+                Retrying...
               </Text>
             </>
           ) : (
