@@ -230,15 +230,10 @@ export const VideoPlayer = ({
     }
   }, [setGlobalFullscreen]);
 
-  const handleFullscreenExit = useCallback(async () => {
+  const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
-    // Samsung codecs lose video surface on VideoView switch — force reconnect
-    if (Platform.OS === 'android') {
-      await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
-      activePlayer.play();
-    }
-  }, [setGlobalFullscreen, activePlayer, videoUrls, activeUrlKey]);
+  }, [setGlobalFullscreen]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
