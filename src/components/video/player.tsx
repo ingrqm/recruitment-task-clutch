@@ -5,8 +5,10 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Platform,
   Pressable,
+  StatusBar,
   Text,
   View,
 } from 'react-native';
@@ -135,7 +137,6 @@ export const VideoPlayer = ({
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const skipMuteSyncRef = useRef(false);
 
@@ -215,17 +216,15 @@ export const VideoPlayer = ({
   const handleEnterFullscreen = useCallback(() => {
     setIsFullscreen(true);
     setGlobalFullscreen(true);
-    videoViewRef.current?.enterFullscreen();
+    if (Platform.OS !== 'android') {
+      videoViewRef.current?.enterFullscreen();
+    }
   }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
   }, [setGlobalFullscreen]);
-
-  const handleToggleControls = useCallback(() => {
-    setShowControls((prev) => !prev);
-  }, []);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
@@ -234,11 +233,7 @@ export const VideoPlayer = ({
         runOnJS(onTapInactive)();
         return;
       }
-      if (Platform.OS === 'android') {
-        runOnJS(handleToggleControls)();
-      } else {
-        runOnJS(handleEnterFullscreen)();
-      }
+      runOnJS(handleEnterFullscreen)();
     });
 
   const doubleTap = Gesture.Tap()
@@ -267,7 +262,7 @@ export const VideoPlayer = ({
             player={activePlayer}
             style={{ width: '100%', height: '100%' }}
             contentFit={isFullscreen ? 'contain' : 'cover'}
-            nativeControls={isFullscreen || showControls}
+            nativeControls={isFullscreen}
             fullscreenOptions={{
               enable: true,
               orientation:
@@ -357,6 +352,41 @@ export const VideoPlayer = ({
           color="white"
         />
       </Pressable>
+
+      {Platform.OS === 'android' && isFullscreen && (
+        <Modal
+          visible
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={handleFullscreenExit}
+        >
+          <StatusBar hidden />
+          <View style={{ flex: 1, backgroundColor: 'black' }}>
+            <VideoView
+              player={activePlayer}
+              style={{ flex: 1 }}
+              contentFit="contain"
+              nativeControls
+            />
+            <Pressable
+              onPress={handleFullscreenExit}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="close" size={22} color="white" />
+            </Pressable>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
