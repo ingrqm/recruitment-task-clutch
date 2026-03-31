@@ -133,9 +133,7 @@ jobs:
           PROJECT_ID="8925e5e6-06a5-4a92-8044-9775e6e9e256"
           GROUP_ID="${{ steps.eas-update.outputs.group_id }}"
 
-          DEEP_LINK="exp://u.expo.dev/${PROJECT_ID}/group/${GROUP_ID}"
-          ENCODED_DEEP_LINK=$(printf '%s' "$DEEP_LINK" | jq -sRr @uri)
-          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${ENCODED_DEEP_LINK}"
+          QR_URL="https://qr.expo.dev/eas-update?projectId=${PROJECT_ID}&groupId=${GROUP_ID}"
 
           gh release delete latest --yes 2>/dev/null || true
           git push origin :refs/tags/latest 2>/dev/null || true
