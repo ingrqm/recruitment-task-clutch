@@ -1,9 +1,9 @@
-import { Redirect } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useAuth } from '~/hooks/use-auth';
 
-const IndexScreen = () => {
+const AuthLayout = () => {
   const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
@@ -18,7 +18,14 @@ const IndexScreen = () => {
     return <Redirect href="/(app)/(tabs)/feed" />;
   }
 
-  return <Redirect href="/(auth)/login" />;
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: 'hsl(150, 6%, 3%)' },
+      }}
+    />
+  );
 };
 
-export default IndexScreen;
+export default AuthLayout;
