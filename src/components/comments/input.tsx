@@ -30,6 +30,7 @@ type CommentInputProps = {
   videoId: string;
   replyTo: ReplyTo | null;
   onCancelReply: () => void;
+  onSubmit: () => void;
 };
 
 const extractMentionQuery = (text: string): string | null => {
@@ -59,6 +60,7 @@ export const CommentInput = ({
   videoId,
   replyTo,
   onCancelReply,
+  onSubmit,
 }: CommentInputProps) => {
   const [text, setText] = useState('');
   const [mentions, setMentions] = useState<TrackedMention[]>([]);
@@ -107,6 +109,7 @@ export const CommentInput = ({
     setText('');
     setMentions([]);
     onCancelReply();
+    onSubmit();
   };
 
   const handleMentionSelect = useCallback(

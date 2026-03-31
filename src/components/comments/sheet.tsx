@@ -106,6 +106,12 @@ export const CommentSheet = ({ videoId, onClose }: CommentSheetProps) => {
     setReplyTo(null);
   }, []);
 
+  const handleCommentSubmit = useCallback(() => {
+    setTimeout(() => {
+      bottomSheetRef.current?.snapToIndex(0);
+    }, 100);
+  }, []);
+
   const handleEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -136,12 +142,13 @@ export const CommentSheet = ({ videoId, onClose }: CommentSheetProps) => {
               videoId={videoId}
               replyTo={replyTo}
               onCancelReply={handleCancelReply}
+              onSubmit={handleCommentSubmit}
             />
           </View>
         )}
       </BottomSheetFooter>
     ),
-    [videoId, replyTo, handleCancelReply],
+    [videoId, replyTo, handleCancelReply, handleCommentSubmit],
   );
 
   return (
