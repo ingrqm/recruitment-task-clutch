@@ -9,6 +9,7 @@ import { FeedSkeleton } from '~/components/ui/skeleton';
 import { VideoCard } from '~/components/video';
 import { useVideos } from '~/hooks/use-videos';
 import { useCommentSheet } from '~/store/comment-sheet';
+import { useIsFullscreen } from '~/store/fullscreen';
 import { useLikedBySheet } from '~/store/liked-by-sheet';
 
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
@@ -32,6 +33,7 @@ const FeedScreen = () => {
   const [isAppActive, setIsAppActive] = useState(true);
   const { videoId: commentVideoId, openComments } = useCommentSheet();
   const { openLikedBy } = useLikedBySheet();
+  const isFullscreen = useIsFullscreen();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -116,6 +118,7 @@ const FeedScreen = () => {
             />
           )}
           drawDistance={Platform.OS === 'android' ? 200 : 700}
+          scrollEnabled={!isFullscreen}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           onEndReached={handleEndReached}

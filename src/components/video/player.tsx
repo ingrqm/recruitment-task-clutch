@@ -20,6 +20,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useSetFullscreen } from '~/store/fullscreen';
 import { useMute } from '~/store/mute';
 
 import type {
@@ -51,6 +52,7 @@ export const VideoPlayer = ({
   onDoubleTap,
 }: VideoPlayerProps) => {
   const { isMuted, toggleMute, setMuted } = useMute();
+  const setGlobalFullscreen = useSetFullscreen();
 
   const preloadAll = Platform.OS !== 'android';
 
@@ -211,12 +213,14 @@ export const VideoPlayer = ({
 
   const handleEnterFullscreen = useCallback(() => {
     setIsFullscreen(true);
+    setGlobalFullscreen(true);
     videoViewRef.current?.enterFullscreen();
-  }, []);
+  }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
-  }, []);
+    setGlobalFullscreen(false);
+  }, [setGlobalFullscreen]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
