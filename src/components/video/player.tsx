@@ -259,23 +259,25 @@ export const VideoPlayer = ({
     <View className="aspect-[4/5] w-full overflow-hidden bg-card">
       <GestureDetector gesture={tapGesture}>
         <View style={{ width: '100%', height: '100%' }}>
-          <VideoView
-            ref={videoViewRef}
-            player={activePlayer}
-            style={{ width: '100%', height: '100%' }}
-            contentFit={isFullscreen ? 'contain' : 'cover'}
-            nativeControls={isFullscreen}
-            fullscreenOptions={{
-              enable: true,
-              orientation:
-                activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
-            }}
-            onFullscreenEnter={() => {
-              setIsFullscreen(true);
-              setGlobalFullscreen(true);
-            }}
-            onFullscreenExit={handleFullscreenExit}
-          />
+          {!(Platform.OS === 'android' && isFullscreen) && (
+            <VideoView
+              ref={videoViewRef}
+              player={activePlayer}
+              style={{ width: '100%', height: '100%' }}
+              contentFit={isFullscreen ? 'contain' : 'cover'}
+              nativeControls={isFullscreen}
+              fullscreenOptions={{
+                enable: true,
+                orientation:
+                  activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
+              }}
+              onFullscreenEnter={() => {
+                setIsFullscreen(true);
+                setGlobalFullscreen(true);
+              }}
+              onFullscreenExit={handleFullscreenExit}
+            />
+          )}
 
           <Animated.View
             style={[
