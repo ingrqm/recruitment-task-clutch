@@ -121,11 +121,15 @@ export const VideoPlayer = ({
   const { status } = statusStates[activeUrlKey];
   const { muted: playerMuted } = mutedStates[activeUrlKey];
 
+  const MAX_AUTO_RETRIES = 3;
+
   const thumbnailOpacity = useSharedValue(1);
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [hasExhaustedRetries, setHasExhaustedRetries] = useState(false);
+  const autoRetryCountRef = useRef(0);
   const skipMuteSyncRef = useRef(false);
 
   useEffect(() => {
@@ -187,18 +191,47 @@ export const VideoPlayer = ({
     }
   }, [isActive, isPlaying, status, thumbnailOpacity]);
 
+  const attemptRetry = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
+      activePlayer.play();
+    } catch {
+      // replaceAsync can throw — treat as failed attempt
+    }
+    setTimeout(() => setIsRetrying(false), 2000);
+  }, [activePlayer, videoUrls, activeUrlKey]);
+
   useEffect(() => {
     if (status === 'error') {
       thumbnailOpacity.value = 1;
-    }
-  }, [status, thumbnailOpacity]);
 
-  const handleRetry = useCallback(async () => {
-    setIsRetrying(true);
-    await activePlayer.replaceAsync(videoUrls[activeUrlKey]);
-    activePlayer.play();
-    setTimeout(() => setIsRetrying(false), 2000);
-  }, [activePlayer, videoUrls, activeUrlKey]);
+      if (isActive && autoRetryCountRef.current < MAX_AUTO_RETRIES) {
+        autoRetryCountRef.current += 1;
+        const delay = autoRetryCountRef.current * 1000;
+        const timer = setTimeout(() => attemptRetry(), delay);
+        return () => clearTimeout(timer);
+      }
+
+      if (autoRetryCountRef.current >= MAX_AUTO_RETRIES) {
+        setHasExhaustedRetries(true);
+      }
+    }
+  }, [status, isActive, thumbnailOpacity, attemptRetry]);
+
+  useEffect(() => {
+    if (isActive && hasExhaustedRetries && status === 'error') {
+      autoRetryCountRef.current = 0;
+      setHasExhaustedRetries(false);
+      attemptRetry();
+    }
+  }, [isActive, hasExhaustedRetries, status, attemptRetry]);
+
+  const handleRetry = useCallback(() => {
+    autoRetryCountRef.current = 0;
+    setHasExhaustedRetries(false);
+    attemptRetry();
+  }, [attemptRetry]);
 
   const thumbnailStyle = useAnimatedStyle(() => ({
     opacity: thumbnailOpacity.value,
@@ -307,11 +340,11 @@ export const VideoPlayer = ({
 
       {(status === 'error' || isRetrying) && (
         <View className="absolute inset-0 items-center justify-center bg-black/80">
-          {isRetrying ? (
+          {isRetrying || !hasExhaustedRetries ? (
             <>
               <ActivityIndicator color="white" size="large" />
               <Text className="mt-3 text-sm font-medium text-white">
-                Retrying...
+                Loading video...
               </Text>
             </>
           ) : (
