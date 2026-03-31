@@ -76,12 +76,12 @@ Migrations are auto-deployed to production via CI on merge to `main`.
 cp .env.example .env.local
 ```
 
-Fill in your Supabase credentials:
+Fill in your Supabase credentials (or use the ones below for the demo instance):
 
 ```
-EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-EXPO_PUBLIC_SUPABASE_KEY=your-anon-key
-EXPO_PUBLIC_CLUTCH_API_URL=https://your-project.supabase.co/functions/v1/clutch-demos
+EXPO_PUBLIC_SUPABASE_URL=https://facslbjnymnlgpymnwrx.supabase.co
+EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_rd0l1YmGd6Y8qd0WH8E4mQ_M38hA1Kr
+EXPO_PUBLIC_CLUTCH_API_URL=https://jslnnchztrhhrzytyzql.supabase.co/functions/v1/clutch-demos
 ```
 
 ### 4. Run
@@ -102,6 +102,7 @@ The GitHub Actions workflow runs on every PR and push to `main`:
 | **Validate Migrations** | PR only | Starts local Supabase, runs `db reset` |
 | **Deploy Migrations** | Merge to main | Links project, runs `db push` |
 | **EAS Preview** | PR only | Publishes OTA update with QR code |
+| **Release** | Merge to main | Publishes EAS Update + creates GitHub Release |
 
 ## Scripts
 
