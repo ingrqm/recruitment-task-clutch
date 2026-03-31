@@ -135,6 +135,7 @@ export const VideoPlayer = ({
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const skipMuteSyncRef = useRef(false);
 
@@ -222,6 +223,10 @@ export const VideoPlayer = ({
     setGlobalFullscreen(false);
   }, [setGlobalFullscreen]);
 
+  const handleToggleControls = useCallback(() => {
+    setShowControls((prev) => !prev);
+  }, []);
+
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
     .onEnd(() => {
@@ -229,7 +234,11 @@ export const VideoPlayer = ({
         runOnJS(onTapInactive)();
         return;
       }
-      runOnJS(handleEnterFullscreen)();
+      if (Platform.OS === 'android') {
+        runOnJS(handleToggleControls)();
+      } else {
+        runOnJS(handleEnterFullscreen)();
+      }
     });
 
   const doubleTap = Gesture.Tap()
@@ -258,16 +267,13 @@ export const VideoPlayer = ({
             player={activePlayer}
             style={{ width: '100%', height: '100%' }}
             contentFit={isFullscreen ? 'contain' : 'cover'}
-            nativeControls={isFullscreen}
+            nativeControls={isFullscreen || showControls}
             fullscreenOptions={{
               enable: true,
               orientation:
                 activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
             }}
-            onFullscreenEnter={() => {
-              setIsFullscreen(true);
-              activePlayer.play();
-            }}
+            onFullscreenEnter={() => setIsFullscreen(true)}
             onFullscreenExit={handleFullscreenExit}
           />
 
