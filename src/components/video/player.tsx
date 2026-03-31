@@ -379,7 +379,7 @@ export const VideoPlayer = ({
               style={{
                 position: 'absolute',
                 top: 48,
-                left: 16,
+                right: 16,
                 width: 40,
                 height: 40,
                 borderRadius: 20,
@@ -390,7 +390,7 @@ export const VideoPlayer = ({
                 zIndex: 10,
               }}
             >
-              <Ionicons name="chevron-down" size={26} color="white" />
+              <Ionicons name="close" size={24} color="white" />
             </Pressable>
           </View>
         </Modal>
