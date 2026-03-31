@@ -20,6 +20,7 @@ const AppContent = () => {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="user/[id]" options={{ presentation: 'card' }} />
       </Stack>
       <CommentSheet videoId={commentVideoId} onClose={closeComments} />
       <LikedBySheet videoId={likedByVideoId} onClose={closeLikedBy} />

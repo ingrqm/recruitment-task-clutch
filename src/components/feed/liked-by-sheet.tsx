@@ -4,11 +4,20 @@ import BottomSheet, {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
-import { ActivityIndicator, Dimensions, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuth } from '~/hooks/use-auth';
 import { useLikedBy } from '~/hooks/use-likes';
+import { useLikedBySheet } from '~/store/liked-by-sheet';
 import { getDisplayName } from '~/utils/profile';
 
 import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
@@ -28,12 +37,24 @@ type LikedByUser = {
 };
 
 const LikedByItem = ({ item }: { item: LikedByUser }) => {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { closeLikedBy } = useLikedBySheet();
   const profile = item.profiles;
   const name = getDisplayName(profile);
   const letter = (name[0] ?? '?').toUpperCase();
 
+  const handleOpenProfile = () => {
+    if (user?.id === item.user_id) return;
+    closeLikedBy();
+    router.push(`/(app)/user/${item.user_id}` as const);
+  };
+
   return (
-    <View className="flex-row items-center gap-3 py-3">
+    <Pressable
+      onPress={handleOpenProfile}
+      className="flex-row items-center gap-3 py-3"
+    >
       <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-primary">
         {profile.avatar_url ? (
           <Image
@@ -54,7 +75,7 @@ const LikedByItem = ({ item }: { item: LikedByUser }) => {
           @{profile.username}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 };
 
