@@ -1,16 +1,42 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 const IndexScreen = () => {
   return (
-    <View className="flex-1 items-center justify-center bg-background">
-      <View className="mb-6 h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-        <Text className="text-2xl font-bold text-white">C</Text>
+    <View style={styles.container}>
+      <View style={styles.icon}>
+        <Text style={styles.iconText}>C</Text>
       </View>
-      <Text className="text-xl font-bold text-foreground">
-        Clutch Challenge
-      </Text>
+      <Text style={styles.title}>Clutch Challenge</Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#090A09',
+  },
+  icon: {
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: '#2C5945',
+    marginBottom: 24,
+  },
+  iconText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#D9C8B4',
+  },
+});
 
 export default IndexScreen;
