@@ -1,7 +1,7 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Keyboard, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAddComment } from '~/hooks/use-comments';
@@ -92,6 +92,8 @@ export const CommentInput = ({
   const handleSubmit = () => {
     const trimmed = text.trim();
     if (!trimmed) return;
+
+    Keyboard.dismiss();
 
     const storageContent = buildStorageContent(trimmed, mentions);
 

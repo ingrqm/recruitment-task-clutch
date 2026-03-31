@@ -32,6 +32,7 @@ const ProfileScreen = () => {
     queryClient.setQueryData<Profile>(['profile', user?.id], (prev) =>
       prev ? { ...prev, avatar_url: url } : prev,
     );
+    queryClient.invalidateQueries({ queryKey: ['comments'] });
   };
 
   if (isLoading) {

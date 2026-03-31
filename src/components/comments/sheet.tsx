@@ -107,7 +107,9 @@ export const CommentSheet = ({ videoId, onClose }: CommentSheetProps) => {
   }, []);
 
   const handleCommentSubmit = useCallback(() => {
-    bottomSheetRef.current?.snapToIndex(0);
+    setTimeout(() => {
+      bottomSheetRef.current?.snapToIndex(0);
+    }, 100);
   }, []);
 
   const handleEndReached = useCallback(() => {
