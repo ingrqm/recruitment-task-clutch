@@ -156,8 +156,14 @@ export const VideoPlayer = ({
   }, [isActive, playerMuted, isMuted, setMuted]);
 
   useEffect(() => {
+    const allPlayers: [string, ReturnType<typeof useVideoPlayer>][] = [
+      ['clutch_autopan', playerAutopan],
+      ['match_wo_breaks', playerMatchWoBreaks],
+      ['clutch_landscape', playerLandscape],
+    ];
+
     if (isActive) {
-      Object.entries(players).forEach(([key, p]) => {
+      allPlayers.forEach(([key, p]) => {
         if (key === activeUrlKey) {
           p.muted = isMuted;
           p.play();
@@ -166,12 +172,13 @@ export const VideoPlayer = ({
         }
       });
     } else {
-      Object.values(players).forEach((p) => p.pause());
+      allPlayers.forEach(([, p]) => p.pause());
       thumbnailOpacity.value = 1;
     }
   }, [
     isActive,
     isFullscreen,
+    isMuted,
     activeUrlKey,
     playerAutopan,
     playerMatchWoBreaks,
