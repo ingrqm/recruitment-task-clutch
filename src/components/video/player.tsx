@@ -226,7 +226,7 @@ export const VideoPlayer = ({
     setIsFullscreen(false);
     setGlobalFullscreen(false);
     if (Platform.OS === 'android') {
-      activePlayer.play();
+      setTimeout(() => activePlayer.play(), 200);
     }
   }, [setGlobalFullscreen, activePlayer]);
 
