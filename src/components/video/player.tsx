@@ -212,10 +212,8 @@ export const VideoPlayer = ({
   }));
 
   const handleEnterFullscreen = useCallback(() => {
-    setIsFullscreen(true);
-    setGlobalFullscreen(true);
     videoViewRef.current?.enterFullscreen();
-  }, [setGlobalFullscreen]);
+  }, []);
 
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
@@ -264,7 +262,10 @@ export const VideoPlayer = ({
               orientation:
                 activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
             }}
-            onFullscreenEnter={() => setIsFullscreen(true)}
+            onFullscreenEnter={() => {
+              setIsFullscreen(true);
+              setGlobalFullscreen(true);
+            }}
             onFullscreenExit={handleFullscreenExit}
           />
 
