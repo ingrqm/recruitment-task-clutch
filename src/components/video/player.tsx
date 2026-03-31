@@ -3,7 +3,13 @@ import { useEvent } from 'expo';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -46,20 +52,22 @@ export const VideoPlayer = ({
 }: VideoPlayerProps) => {
   const { isMuted, toggleMute, setMuted } = useMute();
 
+  const preloadAll = Platform.OS !== 'android';
+
   const playerAutopan = useVideoPlayer(
-    activeUrlKey === 'clutch_autopan' || isActive
+    activeUrlKey === 'clutch_autopan' || (preloadAll && isActive)
       ? videoUrls.clutch_autopan
       : null,
     setupPlayer,
   );
   const playerMatchWoBreaks = useVideoPlayer(
-    activeUrlKey === 'match_wo_breaks' || isActive
+    activeUrlKey === 'match_wo_breaks' || (preloadAll && isActive)
       ? videoUrls.match_wo_breaks
       : null,
     setupPlayer,
   );
   const playerLandscape = useVideoPlayer(
-    activeUrlKey === 'clutch_landscape' || isActive
+    activeUrlKey === 'clutch_landscape' || (preloadAll && isActive)
       ? videoUrls.clutch_landscape
       : null,
     setupPlayer,
