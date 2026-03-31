@@ -8,6 +8,7 @@ import { ErrorState } from '~/components/ui/error-state';
 import { FeedSkeleton } from '~/components/ui/skeleton';
 import { VideoCard } from '~/components/video';
 import { useVideos } from '~/hooks/use-videos';
+import { useLikedBySheet } from '~/store/liked-by-sheet';
 
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type { Video } from '~/types';
@@ -28,6 +29,7 @@ const FeedScreen = () => {
 
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [isAppActive, setIsAppActive] = useState(true);
+  const { openLikedBy } = useLikedBySheet();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -101,6 +103,7 @@ const FeedScreen = () => {
               video={item}
               index={index}
               isActive={index === activeVideoIndex && isAppActive}
+              onShowLikedBy={openLikedBy}
               onScrollToVideo={handleScrollToVideo}
               onLayout={handleItemLayout}
             />
