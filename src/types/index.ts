@@ -34,3 +34,16 @@ export type Profile = {
   avatar_url: string | null;
   created_at: string;
 };
+
+export type Like = {
+  id: string;
+  user_id: string;
+  video_id: string;
+  created_at: string;
+};
+
+export type VideoStats = {
+  video_id: string;
+  like_count: number;
+  comment_count: number;
+};

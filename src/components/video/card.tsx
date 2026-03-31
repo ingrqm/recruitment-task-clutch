@@ -2,7 +2,9 @@ import * as Haptics from 'expo-haptics';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
+import { LikeButton } from '~/components/feed/like-button';
 import { DEFAULT_VIDEO_URL_KEY } from '~/constants';
+import { useIsLiked, useToggleLike } from '~/hooks/use-likes';
 
 import { VideoPlayer } from './player';
 import { VideoToggle } from './toggle';
@@ -14,6 +16,7 @@ type VideoCardProps = {
   video: Video;
   index: number;
   isActive: boolean;
+  onShowLikedBy: (videoId: string) => void;
   onScrollToVideo: (index: number) => void;
   onLayout: (height: number) => void;
 };
@@ -22,6 +25,7 @@ export const VideoCard = ({
   video,
   index,
   isActive,
+  onShowLikedBy,
   onScrollToVideo,
   onLayout,
 }: VideoCardProps) => {
@@ -31,6 +35,10 @@ export const VideoCard = ({
 
   const videoUrls = video.highlight_urls.highlight_video_urls;
   const thumbnailUrls = video.highlight_urls.highlight_thumbnail_urls;
+  const videoId = String(video.id);
+
+  const { data: isLiked } = useIsLiked({ videoId });
+  const toggleLike = useToggleLike({ videoId });
 
   const handleTapInactive = useCallback(() => {
     onScrollToVideo(index);
@@ -38,7 +46,10 @@ export const VideoCard = ({
 
   const handleDoubleTap = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
+    if (!isLiked) {
+      toggleLike.mutate({ isCurrentlyLiked: false });
+    }
+  }, [isLiked, toggleLike]);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -58,7 +69,8 @@ export const VideoCard = ({
         onDoubleTap={handleDoubleTap}
       />
 
-      <View className="flex-row items-center justify-end px-4 pt-3">
+      <View className="flex-row items-center justify-between px-4 pt-3">
+        <LikeButton videoId={videoId} onShowLikedBy={onShowLikedBy} />
         <VideoToggle activeKey={activeUrlKey} onToggle={setActiveUrlKey} />
       </View>
     </View>
