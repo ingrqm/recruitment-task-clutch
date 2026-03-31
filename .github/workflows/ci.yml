@@ -117,8 +117,9 @@ jobs:
         id: eas-update
         run: |
           OUTPUT=$(pnpm eas update --branch main --message "${{ github.event.head_commit.message }}" --json 2>/dev/null)
-          GROUP_ID=$(echo "$OUTPUT" | jq -r '.[0].group')
-          echo "group_id=$GROUP_ID" >> "$GITHUB_OUTPUT"
+          echo "group_id=$(echo "$OUTPUT" | jq -r '.[0].group')" >> "$GITHUB_OUTPUT"
+          echo "runtime_version=$(echo "$OUTPUT" | jq -r '.[0].runtimeVersion')" >> "$GITHUB_OUTPUT"
+          echo "created_at=$(echo "$OUTPUT" | jq -r '.[0].createdAt')" >> "$GITHUB_OUTPUT"
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
@@ -131,13 +132,24 @@ jobs:
           VERSION=$(jq -r '.expo.version' app.json)
           SHORT_SHA=${GITHUB_SHA::7}
           TAG="v${VERSION}+${SHORT_SHA}"
+          PROJECT_ID="8925e5e6-06a5-4a92-8044-9775e6e9e256"
           GROUP_ID="${{ steps.eas-update.outputs.group_id }}"
-          UPDATE_URL="https://expo.dev/accounts/ingrqm/projects/clutch-challenge/updates/${GROUP_ID}"
-          ENCODED_URL=$(printf '%s' "$UPDATE_URL" | jq -sRr @uri)
-          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${ENCODED_URL}"
+          RUNTIME="${{ steps.eas-update.outputs.runtime_version }}"
+          CREATED="${{ steps.eas-update.outputs.created_at }}"
+          MESSAGE="${{ github.event.head_commit.message }}"
 
-          gh release create "$TAG" \
-            --title "$TAG" \
+          PREVIEW_URL="https://expo.dev/preview/update?message=$(printf '%s' "$MESSAGE" | jq -sRr @uri)&updateRuntimeVersion=$(printf '%s' "$RUNTIME" | jq -sRr @uri)&createdAt=$(printf '%s' "$CREATED" | jq -sRr @uri)&slug=exp&projectId=${PROJECT_ID}&group=${GROUP_ID}"
+          ENCODED_PREVIEW=$(printf '%s' "$PREVIEW_URL" | jq -sRr @uri)
+          QR_URL="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${ENCODED_PREVIEW}"
+
+          gh release delete latest --yes 2>/dev/null || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          git tag -f latest
+          git push origin latest
+
+          gh release create latest \
+            --title "Latest — ${TAG}" \
+            --latest \
             --notes "$(cat <<BODY
           ## Try it
 
@@ -145,6 +157,6 @@ jobs:
 
           ![QR Code](${QR_URL})
 
-          Or open directly: ${UPDATE_URL}
+          Or open directly: [Preview in Expo Go](${PREVIEW_URL})
           BODY
           )"
