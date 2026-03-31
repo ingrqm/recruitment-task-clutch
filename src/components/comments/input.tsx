@@ -1,7 +1,7 @@
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Keyboard, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAddComment } from '~/hooks/use-comments';
@@ -30,7 +30,6 @@ type CommentInputProps = {
   videoId: string;
   replyTo: ReplyTo | null;
   onCancelReply: () => void;
-  onSubmit: () => void;
 };
 
 const extractMentionQuery = (text: string): string | null => {
@@ -60,7 +59,6 @@ export const CommentInput = ({
   videoId,
   replyTo,
   onCancelReply,
-  onSubmit,
 }: CommentInputProps) => {
   const [text, setText] = useState('');
   const [mentions, setMentions] = useState<TrackedMention[]>([]);
@@ -93,6 +91,8 @@ export const CommentInput = ({
     const trimmed = text.trim();
     if (!trimmed) return;
 
+    Keyboard.dismiss();
+
     const storageContent = buildStorageContent(trimmed, mentions);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -107,7 +107,6 @@ export const CommentInput = ({
     setText('');
     setMentions([]);
     onCancelReply();
-    onSubmit();
   };
 
   const handleMentionSelect = useCallback(
