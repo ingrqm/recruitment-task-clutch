@@ -225,7 +225,8 @@ export const VideoPlayer = ({
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
-  }, [setGlobalFullscreen]);
+    activePlayer.play();
+  }, [setGlobalFullscreen, activePlayer]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
@@ -377,14 +378,16 @@ export const VideoPlayer = ({
               onPress={handleFullscreenExit}
               style={{
                 position: 'absolute',
-                top: 12,
-                left: 12,
+                top: 48,
+                left: 16,
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                backgroundColor: 'rgba(0,0,0,0.5)',
+                backgroundColor: 'rgba(0,0,0,0.6)',
                 alignItems: 'center',
                 justifyContent: 'center',
+                elevation: 10,
+                zIndex: 10,
               }}
             >
               <Ionicons name="chevron-down" size={26} color="white" />
