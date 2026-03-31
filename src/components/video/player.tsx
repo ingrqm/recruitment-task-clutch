@@ -369,7 +369,7 @@ export const VideoPlayer = ({
               style={{ flex: 1 }}
               contentFit="contain"
               nativeControls
-              onFullscreenExit={handleFullscreenExit}
+              fullscreenOptions={{ enable: false }}
             />
           </View>
         </Modal>
