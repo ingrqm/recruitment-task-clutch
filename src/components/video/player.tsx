@@ -5,8 +5,10 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Modal,
   Platform,
   Pressable,
+  StatusBar,
   Text,
   View,
 } from 'react-native';
@@ -212,8 +214,13 @@ export const VideoPlayer = ({
   }));
 
   const handleEnterFullscreen = useCallback(() => {
-    videoViewRef.current?.enterFullscreen();
-  }, []);
+    if (Platform.OS === 'android') {
+      setIsFullscreen(true);
+      setGlobalFullscreen(true);
+    } else {
+      videoViewRef.current?.enterFullscreen();
+    }
+  }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
@@ -349,6 +356,42 @@ export const VideoPlayer = ({
           color="white"
         />
       </Pressable>
+
+      {Platform.OS === 'android' && isFullscreen && (
+        <Modal
+          visible
+          animationType="fade"
+          statusBarTranslucent
+          onRequestClose={handleFullscreenExit}
+        >
+          <StatusBar hidden />
+          <View style={{ flex: 1, backgroundColor: 'black' }}>
+            <VideoView
+              player={activePlayer}
+              style={{ flex: 1 }}
+              contentFit="contain"
+              nativeControls
+              fullscreenOptions={{ enable: false }}
+            />
+            <Pressable
+              onPress={handleFullscreenExit}
+              style={{
+                position: 'absolute',
+                top: 12,
+                left: 12,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="chevron-down" size={26} color="white" />
+            </Pressable>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
