@@ -26,7 +26,7 @@ A React Native video feed app built with **Expo SDK 54**, **Supabase**, and **Ta
 | Video | expo-video (native VideoPlayer with fullscreen support) |
 | Lists | FlashList (recycled views for performance) |
 | Styling | NativeWind v4 (Tailwind CSS for React Native) |
-| Tabs | Expo Router NativeTabs (iOS liquid glass tab bar) |
+| Tabs | Expo Router NativeTabs (iOS 26+ liquid glass), standard Tabs fallback |
 | Sheets | @gorhom/bottom-sheet v5 (dynamic sizing, keyboard-interactive) |
 | Formatting | Prettier with @prettier/plugin-oxc |
 
