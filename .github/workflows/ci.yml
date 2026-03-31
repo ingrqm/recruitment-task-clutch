@@ -90,3 +90,52 @@ jobs:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
           EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
           EXPO_PUBLIC_CLUTCH_API_URL: ${{ secrets.EXPO_PUBLIC_CLUTCH_API_URL }}
+
+  release:
+    name: Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: quality
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish EAS Update
+        run: pnpm eas update --branch main --message "${{ github.event.head_commit.message }}"
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_KEY }}
+          EXPO_PUBLIC_CLUTCH_API_URL: ${{ secrets.EXPO_PUBLIC_CLUTCH_API_URL }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(jq -r '.expo.version' app.json)
+          SHORT_SHA=${GITHUB_SHA::7}
+          TAG="v${VERSION}+${SHORT_SHA}"
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$(cat <<BODY
+          **Commit:** ${{ github.event.head_commit.message }}
+
+          ## Try it
+
+          1. Install [Expo Go](https://expo.dev/go) on your phone
+          2. Open: https://expo.dev/accounts/ingrqm/projects/clutch-challenge/branches/main
+          BODY
+          )"
