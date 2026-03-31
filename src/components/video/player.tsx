@@ -367,6 +367,7 @@ export const VideoPlayer = ({
               style={{ flex: 1 }}
               contentFit="contain"
               nativeControls
+              fullscreenOptions={{ enable: false }}
             />
             <Pressable
               onPress={handleFullscreenExit}
