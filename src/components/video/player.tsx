@@ -171,6 +171,7 @@ export const VideoPlayer = ({
     }
   }, [
     isActive,
+    isFullscreen,
     activeUrlKey,
     playerAutopan,
     playerMatchWoBreaks,
@@ -225,10 +226,7 @@ export const VideoPlayer = ({
   const handleFullscreenExit = useCallback(() => {
     setIsFullscreen(false);
     setGlobalFullscreen(false);
-    if (Platform.OS === 'android') {
-      setTimeout(() => activePlayer.play(), 200);
-    }
-  }, [setGlobalFullscreen, activePlayer]);
+  }, [setGlobalFullscreen]);
 
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)

@@ -49,7 +49,9 @@ const IOSTabs = () => (
   </NativeTabs>
 );
 
-const TabsLayout = () =>
-  Platform.OS === 'ios' ? <IOSTabs /> : <AndroidTabs />;
+const supportsLiquidGlass =
+  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 26;
+
+const TabsLayout = () => (supportsLiquidGlass ? <IOSTabs /> : <AndroidTabs />);
 
 export default TabsLayout;
