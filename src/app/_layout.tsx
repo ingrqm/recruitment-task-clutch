@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ErrorBoundary } from '~/components/ui/error-boundary';
+import { useAuth } from '~/hooks/use-auth';
 import { queryClient } from '~/lib/query-client';
 import { isSupabaseConfigured } from '~/lib/supabase';
 import '~/global.css';
@@ -35,15 +36,21 @@ const MissingConfigScreen = () => {
 };
 
 const RootLayoutInner = () => {
+  const { isLoading } = useAuth();
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
 
   return (
     <>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(app)" />
       </Stack>
     </>
   );
