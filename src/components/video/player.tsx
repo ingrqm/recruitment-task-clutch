@@ -5,10 +5,8 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Platform,
   Pressable,
-  StatusBar,
   Text,
   View,
 } from 'react-native';
@@ -216,9 +214,7 @@ export const VideoPlayer = ({
   const handleEnterFullscreen = useCallback(() => {
     setIsFullscreen(true);
     setGlobalFullscreen(true);
-    if (Platform.OS !== 'android') {
-      videoViewRef.current?.enterFullscreen();
-    }
+    videoViewRef.current?.enterFullscreen();
   }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
@@ -257,22 +253,20 @@ export const VideoPlayer = ({
     <View className="aspect-[4/5] w-full overflow-hidden bg-card">
       <GestureDetector gesture={tapGesture}>
         <View style={{ width: '100%', height: '100%' }}>
-          {!(Platform.OS === 'android' && isFullscreen) && (
-            <VideoView
-              ref={videoViewRef}
-              player={activePlayer}
-              style={{ width: '100%', height: '100%' }}
-              contentFit={isFullscreen ? 'contain' : 'cover'}
-              nativeControls={isFullscreen}
-              fullscreenOptions={{
-                enable: true,
-                orientation:
-                  activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
-              }}
-              onFullscreenEnter={() => setIsFullscreen(true)}
-              onFullscreenExit={handleFullscreenExit}
-            />
-          )}
+          <VideoView
+            ref={videoViewRef}
+            player={activePlayer}
+            style={{ width: '100%', height: '100%' }}
+            contentFit={isFullscreen ? 'contain' : 'cover'}
+            nativeControls={isFullscreen}
+            fullscreenOptions={{
+              enable: true,
+              orientation:
+                activeUrlKey === 'clutch_landscape' ? 'landscape' : 'default',
+            }}
+            onFullscreenEnter={() => setIsFullscreen(true)}
+            onFullscreenExit={handleFullscreenExit}
+          />
 
           <Animated.View
             style={[
@@ -354,26 +348,6 @@ export const VideoPlayer = ({
           color="white"
         />
       </Pressable>
-
-      {Platform.OS === 'android' && isFullscreen && (
-        <Modal
-          visible
-          animationType="fade"
-          statusBarTranslucent
-          onRequestClose={handleFullscreenExit}
-        >
-          <StatusBar hidden />
-          <View style={{ flex: 1, backgroundColor: 'black' }}>
-            <VideoView
-              player={activePlayer}
-              style={{ flex: 1 }}
-              contentFit="contain"
-              nativeControls
-              fullscreenOptions={{ enable: false }}
-            />
-          </View>
-        </Modal>
-      )}
     </View>
   );
 };
