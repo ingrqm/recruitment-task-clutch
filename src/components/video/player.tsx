@@ -222,14 +222,6 @@ export const VideoPlayer = ({
     setGlobalFullscreen(false);
   }, [setGlobalFullscreen]);
 
-  const handleTogglePlayback = useCallback(() => {
-    if (activePlayer.playing) {
-      activePlayer.pause();
-    } else {
-      activePlayer.play();
-    }
-  }, [activePlayer]);
-
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
     .onEnd(() => {
@@ -237,11 +229,7 @@ export const VideoPlayer = ({
         runOnJS(onTapInactive)();
         return;
       }
-      if (Platform.OS === 'android') {
-        runOnJS(handleTogglePlayback)();
-      } else {
-        runOnJS(handleEnterFullscreen)();
-      }
+      runOnJS(handleEnterFullscreen)();
     });
 
   const doubleTap = Gesture.Tap()
