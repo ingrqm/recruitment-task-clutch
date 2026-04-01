@@ -137,6 +137,7 @@ export const VideoPlayer = ({
   const heartScale = useSharedValue(0);
   const videoViewRef = useRef<VideoView>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenModal, setShowFullscreenModal] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const skipMuteSyncRef = useRef(false);
 
@@ -224,6 +225,7 @@ export const VideoPlayer = ({
   const handleEnterFullscreen = useCallback(() => {
     if (Platform.OS === 'android') {
       setIsFullscreen(true);
+      setShowFullscreenModal(true);
       setGlobalFullscreen(true);
     } else {
       videoViewRef.current?.enterFullscreen();
@@ -231,8 +233,17 @@ export const VideoPlayer = ({
   }, [setGlobalFullscreen]);
 
   const handleFullscreenExit = useCallback(() => {
-    setIsFullscreen(false);
-    setGlobalFullscreen(false);
+    if (Platform.OS === 'android') {
+      // Two-phase exit: unmount Modal first, then mount card VideoView
+      setShowFullscreenModal(false);
+      setTimeout(() => {
+        setIsFullscreen(false);
+        setGlobalFullscreen(false);
+      }, 100);
+    } else {
+      setIsFullscreen(false);
+      setGlobalFullscreen(false);
+    }
   }, [setGlobalFullscreen]);
 
   const singleTap = Gesture.Tap()
@@ -367,7 +378,7 @@ export const VideoPlayer = ({
         />
       </Pressable>
 
-      {Platform.OS === 'android' && isFullscreen && (
+      {Platform.OS === 'android' && showFullscreenModal && (
         <Modal
           visible
           animationType="fade"
